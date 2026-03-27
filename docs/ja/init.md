@@ -10,7 +10,7 @@ ln -s ~/ghq/github.com/moonbitlang/tree-sitter-moonbit refs/moonbitlang/tree-sit
 
 ghq get -p github.com/shikijs/textmate-grammars-themes
 mkdir -p refs/shikijs
-ln -s ~/github.com/shikijs/textmate-grammars-themes refs/shikijs/textmate-grammars-themes
+ln -s ~/ghq/github.com/shikijs/textmate-grammars-themes refs/shikijs/textmate-grammars-themes
 
 ghq get -p github.com/moonbitlang/moonbit-docs
 mkdir -p refs/moonbitlang
