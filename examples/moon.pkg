@@ -2,15 +2,15 @@
 // <- font-lock-comment-face
 
 import {
-// <- font-lock-keyword-face
+  // <- font-lock-keyword-face
   "moonbitlang/core/json",
-//^^^^^^^^^^^^^^^^^^^^^^^ font-lock-string-face
+  //^^^^^^^^^^^^^^^^^^^^^ font-lock-string-face
   "moonbitlang/x/path" @xpath,
-//^^^^^^^^^^^^^^^^^^^^ font-lock-string-face
+  //^^^^^^^^^^^^^^^^^^ font-lock-string-face
 }
 
 options(
   "is-main": true,
-//^^^^^^^^^ font-lock-string-face
-//           ^^^^ font-lock-constant-face
+  //^^^^^^^ font-lock-string-face
+  //         ^^^^ font-lock-constant-face
 )

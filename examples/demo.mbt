@@ -6,6 +6,8 @@
 // ----------------------------------------
 // 1. Error Types (suberror)
 // ----------------------------------------
+
+///|
 suberror EvalError {
   DivByZero
   UnknownVariable(String)
@@ -14,6 +16,8 @@ suberror EvalError {
 // ----------------------------------------
 // 2. Algebraic Data Types (Enum with payloads)
 // ----------------------------------------
+
+///|
 enum Expression {
   Number(Double)
   Variable(String)
@@ -26,11 +30,14 @@ enum Expression {
 // ----------------------------------------
 // 3. Structs with mut fields
 // ----------------------------------------
+
+///|
 struct Environment {
   bindings : Map[String, Double]
   mut eval_count : Int
 }
 
+///|
 struct Stats {
   sum : Double
   mean : Double
@@ -40,6 +47,8 @@ struct Stats {
 // ----------------------------------------
 // 4. Traits (Type Classes)
 // ----------------------------------------
+
+///|
 trait Show {
   to_string(Self) -> String
 }
@@ -49,22 +58,32 @@ trait Show {
 // ----------------------------------------
 
 // Environment methods
+
+///|
 fn Environment::new() -> Environment {
   { bindings: Map::new(), eval_count: 0 }
 }
 
-fn Environment::extend(self : Environment, name : String, value : Double) -> Environment {
+///|
+fn Environment::extend(
+  self : Environment,
+  name : String,
+  value : Double,
+) -> Environment {
   let new_bindings = self.bindings.copy()
   new_bindings.set(name, value)
   { bindings: new_bindings, eval_count: self.eval_count }
 }
 
+///|
 fn Environment::lookup(self : Environment, name : String) -> Double? {
   self.eval_count = self.eval_count + 1
   self.bindings.get(name)
 }
 
 // Show trait for Expression
+
+///|
 impl Show for Expression with to_string(self) {
   match self {
     Number(n) => n.to_string()
@@ -72,11 +91,14 @@ impl Show for Expression with to_string(self) {
     Add(e1, e2) => "(\{e1.to_string()} + \{e2.to_string()})"
     Mul(e1, e2) => "(\{e1.to_string()} * \{e2.to_string()})"
     Div(e1, e2) => "(\{e1.to_string()} / \{e2.to_string()})"
-    Let(name, e1, e2) => "(let \{name} = \{e1.to_string()} in \{e2.to_string()})"
+    Let(name, e1, e2) =>
+      "(let \{name} = \{e1.to_string()} in \{e2.to_string()})"
   }
 }
 
 // Show for Stats
+
+///|
 impl Show for Stats with to_string(self) {
   "Stats(mean: \{self.mean}, sum: \{self.sum}, n: \{self.samples.length()})"
 }
@@ -84,15 +106,19 @@ impl Show for Stats with to_string(self) {
 // ----------------------------------------
 // 6. Pattern Matching & Error Handling
 // ----------------------------------------
-fn Expression::eval(self : Expression, env : Environment) -> Double raise EvalError {
+
+///|
+fn Expression::eval(
+  self : Expression,
+  env : Environment,
+) -> Double raise EvalError {
   match self {
     Number(n) => n
-    Variable(name) => {
+    Variable(name) =>
       match env.lookup(name) {
         Some(v) => v
         None => raise EvalError::UnknownVariable(name)
       }
-    }
     Add(e1, e2) => e1.eval(env) + e2.eval(env)
     Mul(e1, e2) => e1.eval(env) * e2.eval(env)
     Div(e1, e2) => {
@@ -113,6 +139,8 @@ fn Expression::eval(self : Expression, env : Environment) -> Double raise EvalEr
 // ----------------------------------------
 // 7. Generic Functions & Named Parameters
 // ----------------------------------------
+
+///|
 fn[T] option_or_default(opt : T?, default~ : T) -> T {
   match opt {
     Some(v) => v
@@ -120,6 +148,7 @@ fn[T] option_or_default(opt : T?, default~ : T) -> T {
   }
 }
 
+///|
 fn[T, U, E] result_map(result : Result[T, E], f : (T) -> U) -> Result[U, E] {
   match result {
     Ok(v) => Ok(f(v))
@@ -128,10 +157,9 @@ fn[T, U, E] result_map(result : Result[T, E], f : (T) -> U) -> Result[U, E] {
 }
 
 // Named parameters with defaults
-fn create_stats(
-  data : Array[Double],
-  include_mean~ : Bool = true
-) -> Stats {
+
+///|
+fn create_stats(data : Array[Double], include_mean? : Bool = true) -> Stats {
   let n = data.length()
   let sum = if n == 0 {
     0.0
@@ -146,17 +174,15 @@ fn create_stats(
       }
     }
   }
-  let mean = if include_mean && n > 0 {
-    sum / n.to_double()
-  } else {
-    0.0
-  }
+  let mean = if include_mean && n > 0 { sum / n.to_double() } else { 0.0 }
   { sum, mean, samples: data }
 }
 
 // ----------------------------------------
 // 8. Array Operations & Pattern Matching
 // ----------------------------------------
+
+///|
 fn analyze_list(lst : Array[Int]) -> String {
   match lst {
     [] => "Empty list"
@@ -176,6 +202,7 @@ fn analyze_list(lst : Array[Int]) -> String {
   }
 }
 
+///|
 fn array_sum(arr : Array[Int]) -> Int {
   // For loop as expression
   for i = 0, acc = 0; i < arr.length(); i = i + 1 {
@@ -188,18 +215,14 @@ fn array_sum(arr : Array[Int]) -> Int {
 // ----------------------------------------
 // 9. String Processing with Views
 // ----------------------------------------
+
+///|
 fn is_palindrome(s : String) -> Bool {
   let view = s.view()
   fn check(v : StringView) -> Bool {
     match v {
       [] | [_] => true
-      [first, .. rest, last] => {
-        if first == last {
-          check(rest)
-        } else {
-          false
-        }
-      }
+      [first, .. rest, last] => if first == last { check(rest) } else { false }
     }
   }
   check(view)
@@ -208,6 +231,8 @@ fn is_palindrome(s : String) -> Bool {
 // ----------------------------------------
 // 10. Main Function - Demonstration
 // ----------------------------------------
+
+///|
 fn main {
   println("=== MoonBit Feature Showcase ===\n")
 
@@ -219,11 +244,10 @@ fn main {
 
   // -- Expression evaluation with error handling --
   let env = Environment::new()
-  let expr = Let("x", Number(10.0),
-    Add(
-      Variable("x"),
-      Mul(Number(2.0), Div(Number(6.0), Number(2.0)))
-    )
+  let expr = Let(
+    "x",
+    Number(10.0),
+    Add(Variable("x"), Mul(Number(2.0), Div(Number(6.0), Number(2.0)))),
   )
   println("\nExpression: \{expr.to_string()}")
   try {
@@ -232,7 +256,8 @@ fn main {
     println("Total variable lookups: \{env.eval_count}")
   } catch {
     EvalError::DivByZero => println("Error: Division by zero!")
-    EvalError::UnknownVariable(name) => println("Error: Unknown variable '\{name}'")
+    EvalError::UnknownVariable(name) =>
+      println("Error: Unknown variable '\{name}'")
   }
 
   // -- Loop expressions --
@@ -283,9 +308,10 @@ fn main {
   let defaulted = option_or_default(maybe_value, default=0)
   println("Option value: \{defaulted}")
 
-  let division_result : Result[Double, EvalError] = try? {
-    Expression::Div(Number(10.0), Number(0.0)).eval(Environment::new())
-  }
+  let division_result : Result[Double, EvalError] = try? Expression::Div(
+    Number(10.0),
+    Number(0.0),
+  ).eval(Environment::new())
   match division_result {
     Ok(v) => println("Division succeeded: \{v}")
     Err(_) => println("Division failed as expected")
