@@ -13,3 +13,4 @@
     - moonbitのtree-sitterの実装は refs/moonbitlang/tree-sitter-moonbit
     - shikijs用のmoonbitのsyntax highlightの設定は refs/shikijs/textmate-grammars-themes/packages/tm-grammars/grammars/moonbit.json
     - 最もシンプルなtree-sitterの実装は refs/mini-python-mode
+- moonbitのドキュメントは refs/moonbitlang/moonbit-docs 以下にある
