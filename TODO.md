@@ -4,18 +4,18 @@ spec.md をもとにした実装タスク一覧。
 
 ## 現在の実装対象
 
-### [ ] moonbit-mode.el の作成
+### [x] moonbit-mode.el の作成
 
 #### Font-lock（.mbt）
 
-- [ ] comment feature: `(comment)` `(block_comment)` → `font-lock-comment-face`
-- [ ] definition feature:
+- [x] comment feature: `(comment)` `(block_comment)` → `font-lock-comment-face`
+- [x] definition feature:
   - `function_definition` 名前 → `font-lock-function-name-face`
   - `struct_definition` / `enum_definition` / `trait_definition` / `type_definition` / `error_type_definition` 名前 → `font-lock-type-face`
   - `const_definition` 名前 → `font-lock-constant-face`
   - `test_definition` 名前 → `font-lock-function-name-face`
   - `impl_definition` の関数名 → `font-lock-function-name-face`
-- [ ] keyword feature:
+- [x] keyword feature:
   - 型定義キーワード: `struct` `enum` `type` `trait` `typealias` `traitalias` `suberror`
   - 宣言キーワード: `fn` `test` `impl` `fnalias`
   - バインドキーワード: `let` `letrec` `and` `const` `with`
@@ -23,35 +23,35 @@ spec.md をもとにした実装タスク一覧。
   - 例外: `try` `catch` `raise` `noraise`
   - その他: `return` `as` `is` `guard` `defer` `async` `derive` `package` `import` `using`
   - 修飾子: `pub` `priv` `readonly` `all` `open` `extern` `(mutability)` → `font-lock-keyword-face`
-- [ ] string feature:
+- [x] string feature:
   - `(string_literal)` `(multiline_string_literal)` `(string_interpolation)` `(bytes_literal)` → `font-lock-string-face`
   - `(escape_sequence)` → `font-lock-escape-face`
-- [ ] type feature:
+- [x] type feature:
   - `(type_identifier)` `(qualified_type_identifier)` → `font-lock-type-face`
   - builtin types (Unit / Bool / Int / UInt / Int64 / UInt64 / Float / Double / String / Array / FixedArray / Bytes / Byte / Error / Self 等) → `font-lock-builtin-face`
-- [ ] constant feature:
+- [x] constant feature:
   - `(boolean_literal)` → `font-lock-constant-face`
   - `(enum_constructor)` → `font-lock-type-face`
-- [ ] number feature:
+- [x] number feature:
   - `(integer_literal)` `(float_literal)` → `font-lock-number-face`
   - `(char_literal)` → `font-lock-string-face`
-- [ ] attribute feature:
+- [x] attribute feature:
   - `(attribute)` → `font-lock-preprocessor-face`
-- [ ] variable feature:
+- [x] variable feature:
   - `let_expression` / `let_mut_expression` / `value_definition` の変数名 → `font-lock-variable-name-face`
   - 各種パラメータ（positional / labelled / optional）→ `font-lock-variable-name-face`
   - `struct_field_declaration` → `font-lock-property-name-face`
   - `access_expression` のフィールド → `font-lock-property-use-face`
-- [ ] function feature:
+- [x] function feature:
   - 関数呼び出し (apply_expression) → `font-lock-function-call-face`
   - メソッド呼び出し (method_expression, dot_apply_expression) → `font-lock-function-call-face`
-- [ ] operator feature: 各種演算子 → `font-lock-operator-face`
-- [ ] bracket feature: `( ) [ ] { }` → `font-lock-bracket-face`
-- [ ] delimiter feature: `, ; : :: . ..` → `font-lock-delimiter-face`
+- [x] operator feature: 各種演算子 → `font-lock-operator-face`
+- [x] bracket feature: `( ) [ ] { }` → `font-lock-bracket-face`
+- [x] delimiter feature: `, ; : :: . ..` → `font-lock-delimiter-face`
 
 #### Imenu
 
-- [ ] `treesit-simple-imenu-settings` で以下の定義一覧を提供:
+- [x] `treesit-simple-imenu-settings` で以下の定義一覧を提供:
   - Function: `function_definition`
   - Struct: `struct_definition`
   - Enum: `enum_definition`
@@ -63,11 +63,11 @@ spec.md をもとにした実装タスク一覧。
 
 #### モードの基本設定
 
-- [ ] `define-derived-mode moonbit-mode prog-mode`
-- [ ] コメント設定 (`comment-start` = `"// "`)
-- [ ] シンタックステーブルの定義
-- [ ] `auto-mode-alist` への `.mbt` 登録
-- [ ] `treesit-ready-p` チェック付き初期化
+- [x] `define-derived-mode moonbit-mode prog-mode`
+- [x] コメント設定 (`comment-start` = `"// "`)
+- [x] シンタックステーブルの定義
+- [x] `auto-mode-alist` への `.mbt` 登録
+- [x] `treesit-ready-p` チェック付き初期化
 
 ---
 
@@ -95,13 +95,4 @@ spec.md をもとにした実装タスク一覧。
 - `treesit-simple-indent-rules` の実装
 - ブロック / match / if-else / 引数リスト等
 
-### [ ] Navigation
-
-- `treesit-defun-type-regexp` による defun 移動
-- `treesit-thing-settings` による sexp / sentence 移動
-
-### [ ] その他
-
-- Electric characters
-- Which-function モード対応
-- コードフォールディング（外部パッケージ連携）
+### [ ] README.mdの作成

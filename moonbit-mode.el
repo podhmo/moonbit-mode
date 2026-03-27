@@ -1,0 +1,304 @@
+;;; moonbit-mode.el --- Tree-sitter support for MoonBit  -*- lexical-binding: t; -*-
+
+;; Author: podhmo
+;; Keywords: moonbit languages tree-sitter
+;; Version: 0.1.0
+
+;; This file is NOT part of GNU Emacs.
+
+;;; Commentary:
+
+;; `moonbit-mode' is a major mode for MoonBit source files (.mbt)
+;; using Emacs's built-in tree-sitter support (Emacs 29+).
+;;
+;; Features:
+;;   - Syntax highlighting (font-lock) via tree-sitter
+;;   - Imenu support for definitions
+;;
+;; Requirements:
+;;   - Emacs 29 or later
+;;   - tree-sitter MoonBit grammar installed:
+;;       M-x treesit-install-language-grammar RET moonbit RET
+;;
+;;     Or manually configure `treesit-language-source-alist':
+;;       (add-to-list 'treesit-language-source-alist
+;;                    '(moonbit "https://github.com/moonbitlang/tree-sitter-moonbit"))
+;;
+;; Usage:
+;;   (require 'moonbit-mode)
+
+;;; Code:
+
+(require 'treesit)
+
+;;; Syntax table
+
+(defvar moonbit-mode--syntax-table
+  (let ((table (make-syntax-table)))
+    (modify-syntax-entry ?_  "_"       table)  ; identifier constituent
+    (modify-syntax-entry ?/  ". 124b"  table)  ; // and /* */ comments
+    (modify-syntax-entry ?*  ". 23"    table)
+    (modify-syntax-entry ?\n "> b"     table)
+    (modify-syntax-entry ?\\ "\\"      table)
+    (modify-syntax-entry ?\" "\""      table)  ; string delimiter
+    (modify-syntax-entry ?\' "\""      table)  ; char literal delimiter
+    (modify-syntax-entry ?`  "\""      table)
+    table)
+  "Syntax table for `moonbit-mode'.")
+
+;;; Font-lock
+
+(defvar moonbit-mode--keywords-type
+  '("struct" "enum" "type" "trait" "typealias" "traitalias" "suberror")
+  "MoonBit type definition keywords.")
+
+(defvar moonbit-mode--keywords-fn
+  '("fn" "test" "impl" "fnalias")
+  "MoonBit function/impl keywords.")
+
+(defvar moonbit-mode--keywords-modifier
+  '("pub" "priv" "readonly" "all" "open" "extern")
+  "MoonBit visibility/modifier keywords.")
+
+(defvar moonbit-mode--keywords-control
+  '("if" "else" "match" "while" "loop" "for" "in" "break" "continue"
+    "return" "as" "is" "guard" "with" "let" "letrec" "and" "const"
+    "derive" "async" "defer" "package" "import" "using"
+    "try" "catch" "raise" "noraise" "nobreak" "longest" "lexmatch")
+  "MoonBit control flow and binding keywords.")
+
+(defvar moonbit-mode--builtin-types
+  '("Unit" "Bool" "Byte" "Int16" "UInt16" "Int" "UInt" "Int64" "UInt64"
+    "Float" "Double" "FixedArray" "Array" "Bytes" "String" "Error" "Self")
+  "MoonBit built-in types.")
+
+(defvar moonbit-mode--builtin-traits
+  '("Eq" "Compare" "Hash" "Show" "Default" "ToJson" "FromJson")
+  "MoonBit built-in traits.")
+
+(defvar moonbit-mode--operators
+  '("+" "-" "*" "/" "%"
+    "<<" ">>" "|" "&" "^"
+    "=" "+=" "-=" "*=" "/=" "%="
+    "<" ">" ">=" "<=" "==" "!="
+    "&&" "||"
+    "|>"
+    "=>" "->"
+    "!" "!!" "?"
+    "..<" "..=" "..<=" "..>" "..>=")
+  "MoonBit operators.")
+
+(defun moonbit-mode--font-lock-settings ()
+  "Return tree-sitter font-lock settings for MoonBit."
+  (treesit-font-lock-rules
+
+   ;; ── Level 1: comment, definition ────────────────────────────────
+
+   :language 'moonbit
+   :feature 'comment
+   '([(comment) (block_comment)] @font-lock-comment-face)
+
+   :language 'moonbit
+   :feature 'definition
+   '(;; Function definitions
+     (function_definition
+      (function_identifier (lowercase_identifier) @font-lock-function-name-face))
+     ;; Method definitions: Type::method
+     (function_definition
+      (function_identifier
+       (type_name) (_)
+       (lowercase_identifier) @font-lock-function-name-face))
+     ;; Impl method definitions
+     (impl_definition
+      (function_identifier (lowercase_identifier) @font-lock-function-name-face))
+     ;; Test definitions
+     (test_definition (string_literal) @font-lock-function-name-face)
+     ;; Type/struct/enum/trait definitions
+     (struct_definition      (identifier) @font-lock-type-face)
+     (tuple_struct_definition (identifier) @font-lock-type-face)
+     (enum_definition        (identifier) @font-lock-type-face)
+     (trait_definition       (identifier) @font-lock-type-face)
+     (type_definition        (identifier) @font-lock-type-face)
+     (error_type_definition  (identifier) @font-lock-type-face)
+     (type_alias_definition  (identifier) @font-lock-type-face)
+     (trait_alias_definition (identifier) @font-lock-type-face)
+     ;; Const definitions
+     (const_definition (uppercase_identifier) @font-lock-constant-face))
+
+   ;; ── Level 2: keyword, string ────────────────────────────────────
+
+   :language 'moonbit
+   :feature 'keyword
+   `([,@moonbit-mode--keywords-type]     @font-lock-keyword-face
+     [,@moonbit-mode--keywords-fn]       @font-lock-keyword-face
+     [,@moonbit-mode--keywords-modifier] @font-lock-keyword-face
+     [,@moonbit-mode--keywords-control]  @font-lock-keyword-face
+     [(mutability)]                          @font-lock-keyword-face
+     ;; Identifiers used as keywords (defer, recur, etc.)
+     ((lowercase_identifier) @font-lock-keyword-face
+      (:match "\\`\\(?:import\\|using\\|defer\\|lexmatch\\|recur\\)\\'"
+              @font-lock-keyword-face)))
+
+   :language 'moonbit
+   :feature 'string
+   '([(string_literal)
+      (multiline_string_literal)
+      (string_interpolation)
+      (bytes_literal)
+      (regex_literal)]
+     @font-lock-string-face
+     (escape_sequence) @font-lock-escape-face)
+
+   ;; ── Level 3: type, constant, number, attribute, variable ────────
+
+   :language 'moonbit
+   :feature 'type
+   `(;; Type identifiers
+     (type_identifier) @font-lock-type-face
+     (qualified_type_identifier) @font-lock-type-face
+     ;; Built-in types
+     ((qualified_type_identifier) @font-lock-builtin-face
+      (:match ,(rx-to-string
+                `(seq bol (or ,@moonbit-mode--builtin-types
+                              ,@moonbit-mode--builtin-traits)
+                      eol))
+              @font-lock-builtin-face)))
+
+   :language 'moonbit
+   :feature 'constant
+   '(;; Boolean literals
+     (boolean_literal) @font-lock-constant-face
+     ;; Enum constructors
+     (enum_constructor) @font-lock-type-face
+     ;; Constructor expressions (UpperCase)
+     (constructor_expression (uppercase_identifier) @font-lock-type-face)
+     (constructor_expression (dot_uppercase_identifier) @font-lock-type-face)
+     ;; SCREAMING_SNAKE_CASE identifiers as constants
+     ((constructor_expression (uppercase_identifier) @font-lock-constant-face)
+      (:match "\\`[A-Z][A-Z_0-9]+\\'" @font-lock-constant-face)))
+
+   :language 'moonbit
+   :feature 'number
+   '([(integer_literal) (float_literal)] @font-lock-number-face
+     (char_literal) @font-lock-string-face)
+
+   :language 'moonbit
+   :feature 'attribute
+   '((attribute) @font-lock-preprocessor-face)
+
+   :language 'moonbit
+   :feature 'variable
+   '(;; Variable bindings
+     (value_definition       (lowercase_identifier) @font-lock-variable-name-face)
+     (let_expression         (lowercase_identifier) @font-lock-variable-name-face)
+     (let_mut_expression     (lowercase_identifier) @font-lock-variable-name-face)
+     (for_in_expression "for" (lowercase_identifier) @font-lock-variable-name-face "in")
+     (for_binder             (lowercase_identifier) @font-lock-variable-name-face)
+     ;; Parameters
+     (positional_parameter   (lowercase_identifier) @font-lock-variable-name-face)
+     (labelled_parameter
+      (label (lowercase_identifier) @font-lock-variable-name-face))
+     (optional_parameter
+      (optional_label (lowercase_identifier) @font-lock-variable-name-face))
+     (optional_parameter_with_default
+      (label (lowercase_identifier) @font-lock-variable-name-face))
+     ;; Struct fields (declarations)
+     (struct_field_declaration (lowercase_identifier) @font-lock-property-name-face)
+     ;; Field access
+     (access_expression
+      (accessor (dot_identifier) @font-lock-property-use-face))
+     ;; Package identifiers
+     (package_identifier) @font-lock-constant-face)
+
+   ;; ── Level 4: function, operator, bracket, delimiter ─────────────
+
+   :language 'moonbit
+   :feature 'function
+   '(;; Function calls
+     (apply_expression
+      (qualified_identifier (lowercase_identifier) @font-lock-function-call-face))
+     (apply_expression
+      (qualified_identifier (dot_lowercase_identifier) @font-lock-function-call-face))
+     ;; Method calls
+     (method_expression     (lowercase_identifier) @font-lock-function-call-face)
+     (dot_apply_expression  (dot_identifier) @font-lock-function-call-face))
+
+   :language 'moonbit
+   :feature 'operator
+   `([,@moonbit-mode--operators] @font-lock-operator-face)
+
+   :language 'moonbit
+   :feature 'bracket
+   '((["(" ")" "[" "]" "{" "}"]) @font-lock-bracket-face)
+
+   :language 'moonbit
+   :feature 'delimiter
+   '((["," ";" ":" "::" "." ".."]) @font-lock-delimiter-face)))
+
+;;; Imenu
+
+(defvar moonbit-mode--imenu-settings
+  '(("Function" "\\`function_definition\\'" nil nil)
+    ("Struct"   "\\`struct_definition\\'"   nil nil)
+    ("Enum"     "\\`enum_definition\\'"     nil nil)
+    ("Trait"    "\\`trait_definition\\'"    nil nil)
+    ("Type"     "\\`type_definition\\'"     nil nil)
+    ("Error"    "\\`error_type_definition\\'" nil nil)
+    ("Impl"     "\\`impl_definition\\'"     nil nil)
+    ("Const"    "\\`const_definition\\'"    nil nil)
+    ("Test"     "\\`test_definition\\'"     nil nil))
+  "Imenu settings for `moonbit-mode'.")
+
+;;; Major mode
+
+;;;###autoload
+(define-derived-mode moonbit-mode prog-mode "MoonBit"
+  "Major mode for editing MoonBit source files (.mbt).
+
+Uses Emacs's built-in tree-sitter library for syntax highlighting
+and imenu.  Requires Emacs 29+ and the tree-sitter MoonBit grammar.
+
+To install the grammar, add the following to your init file and run
+`M-x treesit-install-language-grammar RET moonbit RET':
+
+  (add-to-list \\='treesit-language-source-alist
+               \\='(moonbit \"https://github.com/moonbitlang/tree-sitter-moonbit\"))
+
+\\{moonbit-mode-map}"
+  :group 'moonbit
+  :syntax-table moonbit-mode--syntax-table
+
+  ;; Comment style
+  (setq-local comment-start "// ")
+  (setq-local comment-end "")
+  (setq-local comment-start-skip (rx (or (seq "/" (+ "/"))
+                                         (seq "/" (+ "*")))
+                                     (* (syntax whitespace))))
+
+  (if (not (treesit-ready-p 'moonbit))
+      (message "moonbit-mode: tree-sitter MoonBit grammar not available.\n\
+Add (moonbit \"https://github.com/moonbitlang/tree-sitter-moonbit\") to\n\
+`treesit-language-source-alist' and run M-x treesit-install-language-grammar.")
+    (treesit-parser-create 'moonbit)
+
+    ;; Font-lock
+    (setq-local treesit-font-lock-settings
+                (moonbit-mode--font-lock-settings))
+    (setq-local treesit-font-lock-feature-list
+                '((comment definition)
+                  (keyword string)
+                  (type constant number attribute variable)
+                  (function operator bracket delimiter)))
+
+    ;; Imenu
+    (setq-local treesit-simple-imenu-settings
+                moonbit-mode--imenu-settings)
+
+    (treesit-major-mode-setup)))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.mbt\\'" . moonbit-mode))
+
+(provide 'moonbit-mode)
+
+;;; moonbit-mode.el ends here
