@@ -37,32 +37,6 @@ emacs --batch \
 
 ---
 
-## テスト構造
-
-### テストファイル
-
-```
-test/
-└── test-moonbit-mode.el   ERT テスト定義
-test/testdata/
-├── font-lock.mbt          .mbt フォントロック検証ファイル（アノテーション付き）
-├── font-lock.mbti         .mbti フォントロック検証ファイル（アノテーション付き）
-└── moon.pkg               moon.pkg フォントロック検証ファイル（アノテーション付き）
-```
-
-### テスト種別
-
-| テスト名 | 内容 |
-|---------|------|
-| `moonbit-mode-auto-mode-mbt` | `.mbt` ファイルで `moonbit-mode` が有効になることを確認 |
-| `moonbit-mode-auto-mode-mbti` | `.mbti` ファイルで `moonbit-mode` が有効になることを確認 |
-| `moonbit-mode-auto-mode-moon-pkg` | `moon.pkg` ファイルで `moonbit-mode` が有効になることを確認 |
-| `moonbit-mode-font-lock-mbt` | `test/testdata/font-lock.mbt` のアノテーションを検証 |
-| `moonbit-mode-font-lock-mbti` | `test/testdata/font-lock.mbti` のアノテーションを検証 |
-| `moonbit-mode-font-lock-moon-pkg` | `test/testdata/moon.pkg` のアノテーションを検証 |
-
----
-
 ## `ert-font-lock` アノテーション構文
 
 `ert-font-lock` は「検証したい face 情報をソースコードのコメントに書く」形式。テスト実行時にソースを開いてフォントロックを適用し、アノテーションが指定する位置の face を検証する。
