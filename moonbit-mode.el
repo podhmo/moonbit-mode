@@ -329,7 +329,7 @@ Returns nil if NODE is not a recognized defun node."
 ;;; Major mode
 
 ;;;###autoload
-(define-derived-mode moonbit-mode prog-mode "MoonBit"
+(define-derived-mode moonbit-mode prog-mode "moonbit"
   "Major mode for editing MoonBit source files (.mbt).
 
 Uses Emacs's built-in tree-sitter library for syntax highlighting
