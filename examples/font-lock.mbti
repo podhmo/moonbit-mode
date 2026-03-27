@@ -1,0 +1,50 @@
+// Generated using `moon info`, DON'T EDIT IT
+// <- font-lock-comment-face
+package "example/font-lock-test"
+// <- font-lock-keyword-face
+
+// Values
+fn greet(name : String) -> String
+// <- font-lock-keyword-face
+// ^^^^^ font-lock-function-name-face
+//              ^^^^^^ font-lock-builtin-face
+//                         ^^^^^^ font-lock-builtin-face
+
+pub fn[T] identity(x : T) -> T
+// <- font-lock-keyword-face
+//        ^^^^^^^^ font-lock-function-name-face
+
+// Types and methods
+type Wrapper
+// <- font-lock-keyword-face
+//   ^^^^^^^ font-lock-type-face
+
+struct Config {
+// <- font-lock-keyword-face
+//     ^^^^^^ font-lock-type-face
+  debug : Bool
+//^^^^^  font-lock-property-name-face
+//        ^^^^ font-lock-builtin-face
+  level : Int
+//^^^^^ font-lock-property-name-face
+}
+
+enum Status {
+// <- font-lock-keyword-face
+//   ^^^^^^ font-lock-type-face
+  Active
+  Inactive
+}
+
+// Traits
+trait Printable {
+// <- font-lock-keyword-face
+//    ^^^^^^^^^ font-lock-type-face
+  print(Self) -> Unit
+//^^^^^  font-lock-function-name-face
+//               ^^^^ font-lock-builtin-face
+}
+
+// Impl declarations (no body)
+impl Show for Status
+// <- font-lock-keyword-face

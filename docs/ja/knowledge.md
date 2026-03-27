@@ -159,4 +159,59 @@ import {
 
 ### `:override` オプション
 
-`treesit-font-lock-rules` の `:override t` を指定すると、すでに別ルールで face がついているノードを上書きできる。通常は不要だが、変数に代入された関数などを関数名 face で上書きしたい場合に使う（typescript-ts-mode の `declaration` feature が参考例）。
+`treesit-font-lock-rules` の `:override` は font-lock 競合時の挙動を制御する。
+
+| 値 | 挙動 |
+|----|------|
+| `nil`（デフォルト） | 範囲内に 1 文字でも face があれば**全体をスキップ** |
+| `t` | 常に上書き（既存 face を置き換え） |
+| `'keep'` | face がない位置だけを埋める（`font-lock-fillin-text-property`） |
+| `'append'` | 既存 face に追加 |
+| `'prepend'` | 既存 face の前に挿入 |
+
+#### よくある問題と対策
+
+**親ノードが子ノードの face を妨げる**:
+`string_literal` に `font-lock-string-face` が付いた後、その子の `escape_sequence` に `font-lock-escape-face` を付けたい場合、`:override nil` では子ノードの range が既に claim されているため無視される。
+→ `escape_sequence` のルールを **`:override t` の別ブロック**に分離する。
+
+**汎用ルールが特定ルールを先取りする**:
+`(qualified_type_identifier) @type-face` が先に実行され、その後の builtin チェック `((qualified_type_identifier) @builtin-face (:match ...))` が上書きできない（型パラメータの `type_identifier` が `T : Show` 全体を span し `Show` 部分を先取りするケースなど）。
+→ builtin チェックを **`:override t` の別ブロック**に分離して後から適用する。
+
+**attribute 内の文字列 face が attribute face を妨げる**:
+`string` feature（level 2）が `attribute` 内の文字列に face を設定した後、`attribute` feature（level 3）が `(attribute) @preprocessor-face` で全体を塗ろうとしても `:override nil` だとスキップされる。
+→ attribute ルールに **`:override 'keep'`** を指定する（face がない箇所だけを塗る）。
+
+---
+
+## MoonBit ノード型メモ
+
+### 数値リテラルのノード型
+
+| 値の例 | tree-sitter ノード型 |
+|--------|---------------------|
+| `42`, `0xFF`, `0b1010` | `integer_literal` |
+| `3.14` | `double_literal` |
+| `3.14F` | `float_literal`（`F` サフィックス付き） |
+| `'A'` | `char_literal` |
+
+**注意**: `float_literal` は `F` サフィックス付きのみ。通常の小数点数は `double_literal`。
+
+### trait メソッド宣言
+
+`.mbt` の trait 本体および `.mbti` のインターフェース宣言でのメソッド宣言は `fn` キーワードを**使わない**。
+
+```moonbit
+trait Printable {
+  print(Self) -> Unit   // ← fn なし、これが正しい構文
+}
+```
+
+tree-sitter ノード型は `trait_method_declaration`（`function_definition` ではない）。font-lock で関数名を強調したい場合は別途ルールが必要：
+
+```elisp
+(trait_method_declaration
+ (function_identifier (lowercase_identifier) @font-lock-function-name-face))
+```
+

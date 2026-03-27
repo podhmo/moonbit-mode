@@ -111,6 +111,9 @@
      ;; Impl method definitions
      (impl_definition
       (function_identifier (lowercase_identifier) @font-lock-function-name-face))
+     ;; Trait method declarations (in trait bodies, no fn keyword)
+     (trait_method_declaration
+      (function_identifier (lowercase_identifier) @font-lock-function-name-face))
      ;; Test definitions
      (test_definition (string_literal) @font-lock-function-name-face)
      ;; Type/struct/enum/trait definitions
@@ -120,8 +123,8 @@
      (trait_definition       (identifier) @font-lock-type-face)
      (type_definition        (identifier) @font-lock-type-face)
      (error_type_definition  (identifier) @font-lock-type-face)
-     (type_alias_definition  (identifier) @font-lock-type-face)
-     (trait_alias_definition (identifier) @font-lock-type-face)
+     (type_alias_definition  (type_alias_targets  (identifier) @font-lock-type-face))
+     (trait_alias_definition (trait_alias_targets (identifier) @font-lock-type-face))
      ;; Const definitions
      (const_definition (uppercase_identifier) @font-lock-constant-face))
 
@@ -146,17 +149,33 @@
       (string_interpolation)
       (bytes_literal)
       (regex_literal)]
-     @font-lock-string-face
-     (escape_sequence) @font-lock-escape-face)
+     @font-lock-string-face)
+
+   :language 'moonbit
+   :feature 'string
+   :override t
+   '((escape_sequence) @font-lock-escape-face)
 
    ;; ── Level 3: type, constant, number, attribute, variable ────────
 
    :language 'moonbit
    :feature 'type
-   `(;; Type identifiers
+   '(;; General type identifiers
      (type_identifier) @font-lock-type-face
-     (qualified_type_identifier) @font-lock-type-face
-     ;; Built-in types
+     (qualified_type_identifier) @font-lock-type-face)
+
+   ;; Built-in types override: must be a separate block with :override t so
+   ;; that builtin face wins even when a parent (e.g. type_identifier spanning
+   ;; "T : Show") already claimed the region.
+   :language 'moonbit
+   :feature 'type
+   :override t
+   `(((type_identifier) @font-lock-builtin-face
+      (:match ,(rx-to-string
+                `(seq bol (or ,@moonbit-mode--builtin-types
+                              ,@moonbit-mode--builtin-traits)
+                      eol))
+              @font-lock-builtin-face))
      ((qualified_type_identifier) @font-lock-builtin-face
       (:match ,(rx-to-string
                 `(seq bol (or ,@moonbit-mode--builtin-types
@@ -179,11 +198,12 @@
 
    :language 'moonbit
    :feature 'number
-   '([(integer_literal) (float_literal)] @font-lock-number-face
+   '([(integer_literal) (float_literal) (double_literal)] @font-lock-number-face
      (char_literal) @font-lock-string-face)
 
    :language 'moonbit
    :feature 'attribute
+   :override 'keep
    '((attribute) @font-lock-preprocessor-face)
 
    :language 'moonbit
@@ -297,7 +317,11 @@ Add (moonbit \"https://github.com/moonbitlang/tree-sitter-moonbit\") to\n\
     (treesit-major-mode-setup)))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.mbt\\'" . moonbit-mode))
+(add-to-list 'auto-mode-alist '("\\.mbt\\'"  . moonbit-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.mbti\\'" . moonbit-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("/moon\\.pkg\\'" . moonbit-mode))
 
 (provide 'moonbit-mode)
 
