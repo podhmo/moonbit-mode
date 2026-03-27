@@ -5,6 +5,10 @@
 機能
 
 - tree-sitterを利用したfont-lockの定義
+    - .mbt
+    - .mbti
+    - moon.pkg
+- imenu
 
 参考
 
