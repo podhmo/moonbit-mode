@@ -10,6 +10,8 @@
     - moon.pkg
 - imenu
 
+
+
 参考
 
 - 既存のemacsのmajor-modeは /Applications/Emacs.app/Contents/Resources/lisp/progmodes/typescript-ts-mode.el.gz に存在する
