@@ -15,7 +15,8 @@ ln -s ~/github.com/shikijs/textmate-grammars-themes refs/shikijs/textmate-gramma
 ghq get -p github.com/moonbitlang/moonbit-docs
 mkdir -p refs/moonbitlang
 ln -s ~/ghq/github.com/moonbitlang/moonbit-docs refs/moonbitlang/moonbit-docs
+
+ghq get -p github.com/moonbitlang/moonbit-agent-guide
+mkdir -p refs/moonbitlang
+ln -s ~/ghq/github.com/moonbitlang/moonbit-agent-guide refs/moonbitlang/moonbit-agent-guide
 ```
-
-
-

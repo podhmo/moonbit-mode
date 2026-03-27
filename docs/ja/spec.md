@@ -9,6 +9,8 @@
     - .mbti
     - moon.pkg
 - imenu
+    - 選択可能
+    - fix: anonymousになってしまう
 
 
 
@@ -20,3 +22,4 @@
     - shikijs用のmoonbitのsyntax highlightの設定は refs/shikijs/textmate-grammars-themes/packages/tm-grammars/grammars/moonbit.json
     - 最もシンプルなtree-sitterの実装は refs/mini-python-mode
 - moonbitのドキュメントは refs/moonbitlang/moonbit-docs 以下にある
+- moonbitのSKILLsは refs/moonbitlang/moonbit-agent-guide 以下にある

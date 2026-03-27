@@ -10,9 +10,11 @@ spec.md をもとにした実装タスク一覧。
 - [X] シンタックステーブルの定義
 - [X] `auto-mode-alist` への `.mbt` 登録
 - [X] `treesit-ready-p` チェック付き初期化
+- [ ] テストコードの追加
 - [ ] README.mdの作成
     - [ ] 提供されてる機能一覧
     - [ ] 設定方法
+    - [ ] テストの実行方法 (via docs/ja/testing.md)
 - [ ] Font-lock .mbti サポート（インターフェースファイル）
     - `.mbti` は `.mbt` と同じ `moonbit` grammar を使用（別 grammar 不要）
     - body なし宣言（`fn[T] abort(String) -> T`、`impl Show for Int` 等）に対応済み
