@@ -198,6 +198,26 @@ import {
 
 **注意**: `float_literal` は `F` サフィックス付きのみ。通常の小数点数は `double_literal`。
 
+### imenu / defun-name
+
+`treesit-defun-name-function` に設定する `moonbit--treesit-defun-name` は、ノード型ごとに適切な名前を返す。
+
+**ノード型別の名前構築ルール:**
+
+| ノード型 | 名前の構成 | 例 |
+|---------|-----------|-----|
+| `function_definition` | `function_identifier` + `type_parameters`(任意) | `option_or_default[T]`, `Environment::new` |
+| `impl_definition` | `type_name for for-type::function_identifier` | `Show for Expression::to_string` |
+| `struct_definition` / `enum_definition` / `trait_definition` / `type_definition` / `error_type_definition` | `identifier` + `type_parameters`(任意) | `Pair[T]`, `Expression` |
+| `const_definition` | `uppercase_identifier` | `MAX_SIZE` |
+| `test_definition` | `string_literal`（なければ `<anonymous test>`） | `"my test"`, `<anonymous test>` |
+
+**実装上の注意点:**
+
+`(treesit-node-child node 1)` のような位置ベースのアクセスは使わない。`fn[T] foo(...)` では child[1] が `type_parameters` になるため、関数名を取り逃す。代わりに `moonbit--treesit-node-child-by-type` ヘルパーでノード型名による検索を行う。
+
+`impl_definition` の "for 型" の取得は、`type_name`（トレイト名）の終端位置と `function_identifier`（メソッド名）の開始位置の間にある named child を探すことで行う。"for 型" のノード型は文脈によって `qualified_type_identifier`, `apply_type` などさまざまであるため、型名指定ではなく位置によるフィルタリングを使う。
+
 ### trait メソッド宣言
 
 `.mbt` の trait 本体および `.mbti` のインターフェース宣言でのメソッド宣言は `fn` キーワードを**使わない**。

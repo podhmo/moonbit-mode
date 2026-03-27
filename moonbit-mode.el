@@ -269,6 +269,63 @@
     ("Test"     "\\`test_definition\\'"     nil nil))
   "Imenu settings for `moonbit-mode'.")
 
+(defun moonbit--treesit-node-child-by-type (node type)
+  "Return the first named child of NODE with node type TYPE, or nil."
+  (catch 'found
+    (dolist (child (treesit-node-children node t))
+      (when (string= (treesit-node-type child) type)
+        (throw 'found child)))))
+
+(defun moonbit--treesit-defun-name (node)
+  "Return the defun name of NODE for imenu and which-func.
+Includes type parameters when present (e.g. \"foo[T, U]\").
+Returns nil if NODE is not a recognized defun node."
+  (pcase (treesit-node-type node)
+    ;; Function definitions: fn [T] name(...)  or  fn Type::name(...)
+    ("function_definition"
+     (let* ((fn-id (moonbit--treesit-node-child-by-type node "function_identifier"))
+            (tp    (moonbit--treesit-node-child-by-type node "type_parameters")))
+       (when fn-id
+         (concat (treesit-node-text fn-id)
+                 (if tp (treesit-node-text tp) "")))))
+    ;; Impl definitions: impl [T] Trait for Type with method(...)
+    ;; Display as "Trait for Type::method"
+    ("impl_definition"
+     (let* ((children (treesit-node-children node t))
+            (fn-id    (moonbit--treesit-node-child-by-type node "function_identifier"))
+            (trait-n  (moonbit--treesit-node-child-by-type node "type_name"))
+            (for-type (when (and trait-n fn-id)
+                        (let ((trait-end (treesit-node-end trait-n))
+                              (fn-start  (treesit-node-start fn-id)))
+                          (catch 'found
+                            (dolist (child children)
+                              (let ((start (treesit-node-start child)))
+                                (when (and (> start trait-end)
+                                           (< start fn-start))
+                                  (throw 'found child)))))))))
+       (when fn-id
+         (concat (if trait-n  (concat (treesit-node-text trait-n) " for ") "")
+                 (if for-type (concat (treesit-node-text for-type) "::") "")
+                 (treesit-node-text fn-id)))))
+    ;; Type-like definitions: Name [T]
+    ((or "struct_definition" "tuple_struct_definition"
+         "enum_definition"   "trait_definition"
+         "type_definition"   "error_type_definition")
+     (let* ((id (moonbit--treesit-node-child-by-type node "identifier"))
+            (tp (moonbit--treesit-node-child-by-type node "type_parameters")))
+       (when id
+         (concat (treesit-node-text id)
+                 (if tp (treesit-node-text tp) "")))))
+    ;; Constants
+    ("const_definition"
+     (let ((id (moonbit--treesit-node-child-by-type node "uppercase_identifier")))
+       (when id (treesit-node-text id))))
+    ;; Tests: named or anonymous
+    ("test_definition"
+     (let ((sl (moonbit--treesit-node-child-by-type node "string_literal")))
+       (if sl (treesit-node-text sl) "<anonymous test>")))
+    (_ nil)))
+
 ;;; Major mode
 
 ;;;###autoload
@@ -311,6 +368,7 @@ Add (moonbit \"https://github.com/moonbitlang/tree-sitter-moonbit\") to\n\
                   (function operator bracket delimiter)))
 
     ;; Imenu
+    (setq-local treesit-defun-name-function #'moonbit--treesit-defun-name)
     (setq-local treesit-simple-imenu-settings
                 moonbit-mode--imenu-settings)
 
