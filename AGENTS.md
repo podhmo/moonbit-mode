@@ -4,7 +4,7 @@
 
 ## 構造
 
-- moonbit-ts-mode.el
+- moonbit-mode.el
 - README.md
 
 ## ドキュメント

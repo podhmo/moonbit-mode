@@ -72,10 +72,10 @@ pub trait MyTrait : Eq
 pub async fn fetch(String) -> String
 ```
 
-**Emacs 対応:** 同じ `moonbit-ts-mode` に `auto-mode-alist` 登録するだけで動作する。
+**Emacs 対応:** 同じ `moonbit-mode` に `auto-mode-alist` 登録するだけで動作する。
 
 ```elisp
-(add-to-list 'auto-mode-alist '("\\.mbti\\'" . moonbit-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.mbti\\'" . moonbit-mode))
 ```
 
 ### moon.pkg（パッケージマニフェスト）
@@ -121,7 +121,7 @@ import {
 **Emacs 対応:** ファイル名ベースのマッチが必要（拡張子ではなくファイル名）。
 
 ```elisp
-(add-to-list 'auto-mode-alist '("/moon\\.pkg\\'" . moonbit-ts-mode))
+(add-to-list 'auto-mode-alist '("/moon\\.pkg\\'" . moonbit-mode))
 ```
 
 ---

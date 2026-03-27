@@ -63,7 +63,7 @@ spec.md をもとにした実装タスク一覧。
 
 #### モードの基本設定
 
-- [ ] `define-derived-mode moonbit-ts-mode prog-mode`
+- [ ] `define-derived-mode moonbit-mode prog-mode`
 - [ ] コメント設定 (`comment-start` = `"// "`)
 - [ ] シンタックステーブルの定義
 - [ ] `auto-mode-alist` への `.mbt` 登録
@@ -79,7 +79,7 @@ spec.md をもとにした実装タスク一覧。
 - body なし宣言（`fn[T] abort(String) -> T`、`impl Show for Int` 等）に対応済み
 - `auto-mode-alist` への `.mbti` 登録のみで動作するはず
   ```elisp
-  (add-to-list 'auto-mode-alist '("\\.mbti\\'" . moonbit-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.mbti\\'" . moonbit-mode))
   ```
 
 ### [ ] moon.pkg サポート（パッケージマニフェスト）
@@ -87,7 +87,7 @@ spec.md をもとにした実装タスク一覧。
 - `moon.pkg` も同じ `moonbit` grammar を使用（assignment / apply statement 形式）
 - `auto-mode-alist` へのファイル名ベース登録が必要（拡張子ではなくファイル名）
   ```elisp
-  (add-to-list 'auto-mode-alist '("/moon\\.pkg\\'" . moonbit-ts-mode))
+  (add-to-list 'auto-mode-alist '("/moon\\.pkg\\'" . moonbit-mode))
   ```
 
 ### [ ] インデント

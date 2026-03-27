@@ -263,7 +263,7 @@ tree-sitter とは独立しているが、major mode として必須の設定。
 `font-lock-syntactic-keywords` より前の段階で文字の構文クラスを定義する。文字列・コメントの認識に影響する。
 
 ```elisp
-(defvar moonbit-ts-mode--syntax-table
+(defvar moonbit-mode--syntax-table
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?_  "_"       table)  ; 識別子の一部
     (modify-syntax-entry ?/  ". 124b"  table)  ; // と /* */ コメント
@@ -312,7 +312,7 @@ tree-sitter とは独立しているが、major mode として必須の設定。
 
 ```elisp
 (setq treesit-fold-range-alist
-      '((moonbit-ts-mode
+      '((moonbit-mode
          (block_expression   . treesit-fold-range-block)
          (match_expression   . treesit-fold-range-block)
          (function_definition . treesit-fold-range-block)
