@@ -44,7 +44,7 @@ emacs --batch \
 ```
 test/
 └── test-moonbit-mode.el   ERT テスト定義
-examples/
+test/testdata/
 ├── font-lock.mbt          .mbt フォントロック検証ファイル（アノテーション付き）
 ├── font-lock.mbti         .mbti フォントロック検証ファイル（アノテーション付き）
 └── moon.pkg               moon.pkg フォントロック検証ファイル（アノテーション付き）
@@ -57,9 +57,9 @@ examples/
 | `moonbit-mode-auto-mode-mbt` | `.mbt` ファイルで `moonbit-mode` が有効になることを確認 |
 | `moonbit-mode-auto-mode-mbti` | `.mbti` ファイルで `moonbit-mode` が有効になることを確認 |
 | `moonbit-mode-auto-mode-moon-pkg` | `moon.pkg` ファイルで `moonbit-mode` が有効になることを確認 |
-| `moonbit-mode-font-lock-mbt` | `examples/font-lock.mbt` のアノテーションを検証 |
-| `moonbit-mode-font-lock-mbti` | `examples/font-lock.mbti` のアノテーションを検証 |
-| `moonbit-mode-font-lock-moon-pkg` | `examples/moon.pkg` のアノテーションを検証 |
+| `moonbit-mode-font-lock-mbt` | `test/testdata/font-lock.mbt` のアノテーションを検証 |
+| `moonbit-mode-font-lock-mbti` | `test/testdata/font-lock.mbti` のアノテーションを検証 |
+| `moonbit-mode-font-lock-moon-pkg` | `test/testdata/moon.pkg` のアノテーションを検証 |
 
 ---
 
@@ -112,7 +112,7 @@ let x = 42
 
 ## フォントロック検証ファイルの構成
 
-`examples/font-lock.mbt` は `treesit-font-lock-level 4`（全フィーチャ有効）を前提として作成されており、level 1 から level 4 までのフィーチャを網羅的に検証する。
+`test/testdata/font-lock.mbt` は `treesit-font-lock-level 4`（全フィーチャ有効）を前提として作成されており、level 1 から level 4 までのフィーチャを網羅的に検証する。
 
 | Level | フィーチャ |
 |-------|-----------|
@@ -127,7 +127,7 @@ let x = 42
 
 ### 新しいフォントロック検証を追加する
 
-1. `examples/font-lock.mbt`（または `.mbti`, `moon.pkg`）に MoonBit コードと `ert-font-lock` アノテーションを追記する
+1. `test/testdata/font-lock.mbt`（または `.mbti`, `moon.pkg`）に MoonBit コードと `ert-font-lock` アノテーションを追記する
 
 2. アノテーション位置を正確に計算する：
    - `^` は `//` を含む列番号でカウントする（0-indexed）
@@ -155,7 +155,7 @@ M-x treesit-explore-mode
 ```bash
 emacs --batch -l moonbit-mode.el --eval '
 (progn
-  (find-file "examples/font-lock.mbt")
+  (find-file "test/testdata/font-lock.mbt")
   (moonbit-mode)
   (let ((treesit-font-lock-level 4))
     (treesit-font-lock-recompute-features)

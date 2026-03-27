@@ -3,7 +3,7 @@
 ;;; Commentary:
 ;;
 ;; Font-lock and defun-name tests for moonbit-mode.
-;; Uses ert-font-lock to validate annotated files under examples/.
+;; Uses ert-font-lock to validate annotated files under test/testdata/.
 ;;
 ;; Requirements:
 ;;   - Emacs 30+  + tree-sitter MoonBit grammar installed (tree-sitter's ABI version is 15)
@@ -45,8 +45,8 @@
 ;;; Helpers
 
 (defun moonbit-mode-test--example (filename)
-  "Return the absolute path to examples/FILENAME."
-  (expand-file-name (concat "examples/" filename)
+  "Return the absolute path to test/testdata/FILENAME."
+  (expand-file-name (concat "test/testdata/" filename)
                     moonbit-mode-test--root))
 
 (defmacro moonbit-mode-test--with-level4 (&rest body)
