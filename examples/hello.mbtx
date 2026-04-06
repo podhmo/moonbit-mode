@@ -1,0 +1,12 @@
+// https://docs.moonbitlang.com/en/stable/toolchain/moon/script-mode.html
+
+///|
+import {
+  "moonbitlang/core/list" @ls
+}
+
+///|
+fn main {
+  let xs = @ls.from_array(["1", "2", "3"])
+  debug(xs)
+}

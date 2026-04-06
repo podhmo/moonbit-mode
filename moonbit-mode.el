@@ -379,6 +379,8 @@ Add (moonbit \"https://github.com/moonbitlang/tree-sitter-moonbit\") to\n\
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.mbti\\'" . moonbit-mode))
 ;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.mbtx\\'" . moonbit-mode))
+;;;###autoload
 (add-to-list 'auto-mode-alist '("/moon\\.pkg\\'" . moonbit-mode))
 
 (provide 'moonbit-mode)
