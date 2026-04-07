@@ -52,6 +52,7 @@ Or enable automatically for all MoonBit buffers:
 
 ```elisp
 (add-hook 'moonbit-mode-hook #'flymake-mode)
+(add-hook 'moonbit-mode-hook #'eldoc-mode)
 ```
 
 The command can be customized via `moonbit-flymake-command`:
