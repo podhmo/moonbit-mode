@@ -21,6 +21,7 @@
 
 (require 'ert)
 (require 'ert-font-lock)
+(require 'flymake)
 (require 'moonbit-mode)
 
 ;;; Grammar installation
@@ -211,6 +212,110 @@
         (with-current-buffer buf
           (should (eq major-mode 'moonbit-mode)))
       (kill-buffer buf))))
+
+;;; Flymake tests
+
+(defun moonbit-flymake-test--load-fixture (filename)
+  "Return the content of FILENAME under test/testdata/, with __PROJECT_ROOT__ expanded."
+  (let* ((path (expand-file-name (concat "test/testdata/" filename)
+                                 moonbit-mode-test--root))
+         (raw  (with-temp-buffer
+                 (insert-file-contents path)
+                 (buffer-string))))
+    (string-replace "__PROJECT_ROOT__"
+                    (directory-file-name moonbit-mode-test--root)
+                    raw)))
+
+(defun moonbit-flymake-test--parse-fixture (fixture-text source-buf)
+  "Return diagnostics by parsing FIXTURE-TEXT (NDJSON) for SOURCE-BUF."
+  (with-temp-buffer
+    (insert fixture-text)
+    (moonbit-flymake--make-diagnostics source-buf)))
+
+;;; moonbit-flymake--parse-loc
+
+(ert-deftest moonbit-flymake-parse-loc-normal ()
+  "Parse a typical location string."
+  (should (equal (moonbit-flymake--parse-loc "15:1-15:2") '(15 1 15 2))))
+
+(ert-deftest moonbit-flymake-parse-loc-zero ()
+  "Parse a zero-origin placeholder location."
+  (should (equal (moonbit-flymake--parse-loc "0:0-0:0") '(0 0 0 0))))
+
+(ert-deftest moonbit-flymake-parse-loc-multiline ()
+  "Parse a location that spans multiple lines."
+  (should (equal (moonbit-flymake--parse-loc "3:0-5:10") '(3 0 5 10))))
+
+(ert-deftest moonbit-flymake-parse-loc-invalid ()
+  "Return nil for an invalid location string."
+  (should (null (moonbit-flymake--parse-loc "invalid"))))
+
+;;; moonbit-flymake--make-diagnostics (fixture-based)
+;;
+;; test/testdata/moon-check-output.ndjson is the captured output of
+;; `moon check --output-json' run at the project root, with the
+;; absolute project root replaced by __PROJECT_ROOT__.
+
+(ert-deftest moonbit-flymake-make-diagnostics-from-fixture ()
+  "Parse real moon check output for font-lock.mbt and verify counts and types."
+  (let* ((fixture (moonbit-flymake-test--load-fixture "moon-check-output.ndjson"))
+         (src     (find-file-noselect
+                   (moonbit-mode-test--example "font-lock.mbt")))
+         diags errors warnings)
+    (unwind-protect
+        (progn
+          (setq diags    (moonbit-flymake-test--parse-fixture fixture src))
+          (setq errors   (seq-filter
+                          (lambda (d) (eq (flymake-diagnostic-type d) :error))
+                          diags))
+          (setq warnings (seq-filter
+                          (lambda (d) (eq (flymake-diagnostic-type d) :warning))
+                          diags))
+          ;; There are diagnostics for font-lock.mbt
+          (should (> (length diags) 0))
+          (should (> (length errors) 0))
+          (should (> (length warnings) 0))
+          ;; The first error is at line 15 ("Parse error, unexpected token infix 3")
+          (should (equal (flymake-diagnostic-text (car errors))
+                         "Parse error, unexpected token infix 3, you may expect \
+`pub`, `priv`, `type`, `suberror`, `typealias`, `async`, `fn`, `fnalias`, \
+`struct`, `enum`, `let`, `const`, `extern`, `test`, `impl`, `trait`, \
+`traitalias`, `enumview`, `#attribute` or `using`.")))
+      (kill-buffer src))))
+
+(ert-deftest moonbit-flymake-make-diagnostics-skip-empty-path ()
+  "Skip diagnostics whose path is empty (not file-specific)."
+  ;; The fixture contains one entry with path=\"\" (error_code 4074).
+  ;; That entry must not appear in the parsed results for font-lock.mbt.
+  (let* ((fixture (moonbit-flymake-test--load-fixture "moon-check-output.ndjson"))
+         (src     (find-file-noselect
+                   (moonbit-mode-test--example "font-lock.mbt")))
+         diags)
+    (unwind-protect
+        (progn
+          (setq diags (moonbit-flymake-test--parse-fixture fixture src))
+          (should (null (seq-find
+                         (lambda (d)
+                           (equal (flymake-diagnostic-text d)
+                                  "Missing type annotation for the parameter ."))
+                         diags))))
+      (kill-buffer src))))
+
+(ert-deftest moonbit-flymake-make-diagnostics-skip-other-file ()
+  "Diagnostics for moon.pkg are not reported when source is font-lock.mbt."
+  (let* ((fixture (moonbit-flymake-test--load-fixture "moon-check-output.ndjson"))
+         (src     (find-file-noselect
+                   (moonbit-mode-test--example "font-lock.mbt")))
+         diags)
+    (unwind-protect
+        (progn
+          (setq diags (moonbit-flymake-test--parse-fixture fixture src))
+          (should (null (seq-find
+                         (lambda (d)
+                           (equal (flymake-diagnostic-text d)
+                                  "Missing main function in the main package."))
+                         diags))))
+      (kill-buffer src))))
 
 (provide 'test-moonbit-mode)
 

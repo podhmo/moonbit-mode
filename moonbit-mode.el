@@ -326,6 +326,104 @@ Returns nil if NODE is not a recognized defun node."
        (if sl (treesit-node-text sl) "<anonymous test>")))
     (_ nil)))
 
+;;; Flymake
+
+(defcustom moonbit-flymake-command '("moon" "check" "--output-json")
+  "Command used by the `moonbit-flymake' backend.
+A list of strings to invoke moon check with JSON output."
+  :type '(repeat string)
+  :group 'moonbit)
+
+(defvar-local moonbit-flymake--proc nil
+  "Internal variable for `moonbit-flymake'.")
+
+(defun moonbit-flymake--project-root ()
+  "Return the MoonBit project root containing moon.mod.json, or nil."
+  (locate-dominating-file (or buffer-file-name default-directory)
+                          "moon.mod.json"))
+
+(defun moonbit-flymake--parse-loc (loc)
+  "Parse LOC string \"SL:SC-EL:EC\" into (sl sc el ec), all as integers."
+  (when (string-match
+         "\\([0-9]+\\):\\([0-9]+\\)-\\([0-9]+\\):\\([0-9]+\\)"
+         loc)
+    (list (string-to-number (match-string 1 loc))
+          (string-to-number (match-string 2 loc))
+          (string-to-number (match-string 3 loc))
+          (string-to-number (match-string 4 loc)))))
+
+(defun moonbit-flymake--make-diagnostics (source)
+  "Parse moon check JSON output in current buffer for source buffer SOURCE.
+Return a list of Flymake diagnostic objects."
+  (let ((file (buffer-file-name source))
+        diags)
+    (goto-char (point-min))
+    (while (not (eobp))
+      (let ((line (buffer-substring-no-properties
+                   (point) (line-end-position))))
+        (when (string-prefix-p "{" line)
+          (condition-case nil
+              (let* ((obj   (json-parse-string line))
+                     (mtype (gethash "$message_type" obj))
+                     (level (gethash "level" obj))
+                     (path  (gethash "path" obj))
+                     (loc   (gethash "loc" obj))
+                     (msg   (gethash "message" obj)))
+                (when (and (equal mtype "diagnostic")
+                           (stringp path)
+                           (not (string-empty-p path))
+                           (equal path file))
+                  (let* ((parsed (moonbit-flymake--parse-loc loc))
+                         (type   (cond ((equal level "error")   :error)
+                                       ((equal level "warning") :warning)
+                                       (t                       :note)))
+                         (region (when parsed
+                                   (flymake-diag-region
+                                    source
+                                    (car parsed)
+                                    (cadr parsed)))))
+                    (push (flymake-make-diagnostic
+                           source
+                           (if region (car region) (point-min))
+                           (if region (cdr region) (point-min))
+                           type
+                           msg)
+                          diags))))
+            (error nil))))
+      (forward-line 1))
+    (nreverse diags)))
+
+(defun moonbit-flymake (report-fn &rest _args)
+  "Flymake backend for MoonBit using `moon check --output-json'.
+REPORT-FN is Flymake's callback."
+  (when (process-live-p moonbit-flymake--proc)
+    (kill-process moonbit-flymake--proc))
+  (let ((source (current-buffer))
+        (root   (moonbit-flymake--project-root)))
+    (if (not root)
+        (funcall report-fn :panic
+                 :explanation "No moon.mod.json found in parent directories")
+      (let ((out-buf (generate-new-buffer " *moonbit-flymake*")))
+        (setq moonbit-flymake--proc
+              (let ((default-directory root))
+                (make-process
+               :name "moonbit-flymake"
+               :buffer out-buf
+               :command moonbit-flymake-command
+               :noquery t
+               :connection-type 'pipe
+               :sentinel
+               (lambda (p _ev)
+                 (unwind-protect
+                     (when (eq 'exit (process-status p))
+                       (when (with-current-buffer source
+                               (eq p moonbit-flymake--proc))
+                         (with-current-buffer out-buf
+                           (funcall report-fn
+                                    (moonbit-flymake--make-diagnostics source)))))
+                   (unless (process-live-p p)
+                     (kill-buffer out-buf)))))))))))
+
 ;;; Major mode
 
 ;;;###autoload
@@ -372,7 +470,10 @@ Add (moonbit \"https://github.com/moonbitlang/tree-sitter-moonbit\") to\n\
     (setq-local treesit-simple-imenu-settings
                 moonbit-mode--imenu-settings)
 
-    (treesit-major-mode-setup)))
+    (treesit-major-mode-setup))
+
+  ;; Flymake
+  (add-hook 'flymake-diagnostic-functions #'moonbit-flymake nil t))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.mbt\\'"  . moonbit-mode))
