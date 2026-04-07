@@ -30,7 +30,7 @@ emacs --batch \
 | 要件 | 詳細 |
 |------|------|
 | Emacs バージョン | 29 以上（tree-sitter 組み込み版） |
-| `ert-font-lock` | Emacs 30+ は標準搭載。Emacs 29 では `M-x package-install RET ert-font-lock` |
+| `ert-font-lock` | Emacs 30+ は標準搭載。Emacs 30 では `M-x package-install RET ert-font-lock` |
 | tree-sitter MoonBit 文法 | `~/.emacs.d/tree-sitter/` にインストール済みであること |
 
 ローカルソースからの文法インストールは `test/test-moonbit-mode.el` が自動的に行う（`refs/moonbitlang/tree-sitter-moonbit/` を使用、ネットワーク不要）。

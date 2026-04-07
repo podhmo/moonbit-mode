@@ -7,7 +7,7 @@
 ;;
 ;; Requirements:
 ;;   - Emacs 30+  + tree-sitter MoonBit grammar installed (tree-sitter's ABI version is 15)
-;;   - ert-font-lock (bundled with Emacs 30+; install via package-install on Emacs 29)
+;;   - ert-font-lock (bundled with Emacs 30+; install via package-install on Emacs 30)
 ;;
 ;; Run from the project root:
 ;;

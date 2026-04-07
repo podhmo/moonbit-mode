@@ -9,14 +9,14 @@
 ;;; Commentary:
 
 ;; `moonbit-mode' is a major mode for MoonBit source files (.mbt)
-;; using Emacs's built-in tree-sitter support (Emacs 29+).
+;; using Emacs's built-in tree-sitter support (Emacs 30+).
 ;;
 ;; Features:
 ;;   - Syntax highlighting (font-lock) via tree-sitter
 ;;   - Imenu support for definitions
 ;;
 ;; Requirements:
-;;   - Emacs 29 or later
+;;   - Emacs 30 or later
 ;;   - tree-sitter MoonBit grammar installed:
 ;;       M-x treesit-install-language-grammar RET moonbit RET
 ;;
@@ -431,7 +431,7 @@ REPORT-FN is Flymake's callback."
   "Major mode for editing MoonBit source files (.mbt).
 
 Uses Emacs's built-in tree-sitter library for syntax highlighting
-and imenu.  Requires Emacs 29+ and the tree-sitter MoonBit grammar.
+and imenu.  Requires Emacs 30+ and the tree-sitter MoonBit grammar.
 
 To install the grammar, add the following to your init file and run
 `M-x treesit-install-language-grammar RET moonbit RET':
@@ -474,6 +474,11 @@ Add (moonbit \"https://github.com/moonbitlang/tree-sitter-moonbit\") to\n\
 
   ;; Flymake
   (add-hook 'flymake-diagnostic-functions #'moonbit-flymake nil t))
+
+;; (
+;; (setq flymake-show-diagnostics-at-end-of-line t)
+
+
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.mbt\\'"  . moonbit-mode))

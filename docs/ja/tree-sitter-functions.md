@@ -1,6 +1,6 @@
 # tree-sitter を使った moonbit-mode で実装できる機能
 
-`typescript-ts-mode.el`（`/Applications/Emacs.app/Contents/Resources/lisp/progmodes/typescript-ts-mode.el.gz`）および `refs/moonbitlang/tree-sitter-moonbit/queries/highlights.scm` を参照して整理した、tree-sitter（Emacs 29+ 組み込み `treesit` ライブラリ）で実装できる機能の全一覧。
+`typescript-ts-mode.el`（`/Applications/Emacs.app/Contents/Resources/lisp/progmodes/typescript-ts-mode.el.gz`）および `refs/moonbitlang/tree-sitter-moonbit/queries/highlights.scm` を参照して整理した、tree-sitter（Emacs 30+ 組み込み `treesit` ライブラリ）で実装できる機能の全一覧。
 
 参考実装:
 - `refs/mini-python-mode/mini-python-ts-mode.el`（最小テンプレート）
