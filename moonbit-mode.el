@@ -407,22 +407,22 @@ REPORT-FN is Flymake's callback."
         (setq moonbit-flymake--proc
               (let ((default-directory root))
                 (make-process
-               :name "moonbit-flymake"
-               :buffer out-buf
-               :command moonbit-flymake-command
-               :noquery t
-               :connection-type 'pipe
-               :sentinel
-               (lambda (p _ev)
-                 (unwind-protect
-                     (when (eq 'exit (process-status p))
-                       (when (with-current-buffer source
-                               (eq p moonbit-flymake--proc))
-                         (with-current-buffer out-buf
-                           (funcall report-fn
-                                    (moonbit-flymake--make-diagnostics source)))))
-                   (unless (process-live-p p)
-                     (kill-buffer out-buf)))))))))))
+                 :name "moonbit-flymake"
+                 :buffer out-buf
+                 :command moonbit-flymake-command
+                 :noquery t
+                 :connection-type 'pipe
+                 :sentinel
+                 (lambda (p _ev)
+                   (unwind-protect
+                       (when (eq 'exit (process-status p))
+                         (when (with-current-buffer source
+                                 (eq p moonbit-flymake--proc))
+                           (with-current-buffer out-buf
+                             (funcall report-fn
+                                      (moonbit-flymake--make-diagnostics source)))))
+                     (unless (process-live-p p)
+                       (kill-buffer out-buf)))))))))))
 
 ;;; Major mode
 
@@ -474,10 +474,6 @@ Add (moonbit \"https://github.com/moonbitlang/tree-sitter-moonbit\") to\n\
 
   ;; Flymake
   (add-hook 'flymake-diagnostic-functions #'moonbit-flymake nil t))
-
-;; (
-;; (setq flymake-show-diagnostics-at-end-of-line t)
-
 
 
 ;;;###autoload
