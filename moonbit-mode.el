@@ -424,6 +424,80 @@ REPORT-FN is Flymake's callback."
                      (unless (process-live-p p)
                        (kill-buffer out-buf)))))))))))
 
+
+;;;###autoload
+(defun moonbit-format-buffer ()
+  "Format the current buffer using the `moonfmt` command-line tool.
+It reads from stdin and writes to stdout.
+If formatting fails, the buffer remains unmodified and the error is displayed."
+  (interactive)
+  ;; Check if moonfmt executable is available
+  (unless (executable-find "moonfmt")
+    (error "moonfmt executable not found in PATH"))
+
+  (let* ((output-buffer (generate-new-buffer " *moonfmt-output*"))
+         (error-file (make-temp-file "moonfmt-error-"))
+         (exit-code nil))
+    (unwind-protect
+        (progn
+          ;; Run moonfmt on the current buffer's contents.
+          ;; Pass "-" as an argument to read from stdin.
+          ;; stdout goes to output-buffer, stderr goes to error-file.
+          (setq exit-code
+                (call-process-region (point-min) (point-max)
+                                     "moonfmt" nil
+                                     (list output-buffer error-file)
+                                     nil "-"))
+
+          (if (zerop exit-code)
+              ;; Success: Replace current buffer contents with formatted output
+              (progn
+                ;; Use replace-buffer-contents if available (Emacs 26.1+)
+                ;; to preserve point, markers, and minimize undo history.
+                (if (fboundp 'replace-buffer-contents)
+                    (replace-buffer-contents output-buffer)
+                  ;; Fallback for older Emacs versions
+                  (let ((current-point (point))
+                        (current-window-start (window-start)))
+                    (erase-buffer)
+                    (insert-buffer-substring output-buffer)
+                    (goto-char current-point)
+                    (set-window-start nil current-window-start)))
+                (message "moonfmt: Formatted successfully."))
+
+            ;; Failure: Read error message and display it without modifying the buffer
+            (let ((err-msg (with-temp-buffer
+                             (insert-file-contents error-file)
+                             (buffer-string))))
+              ;; Some CLI tools output errors to stdout instead of stderr.
+              ;; If stderr is empty, fallback to reading the output buffer.
+              (when (string-match-p "\\`\\s-*\\'" err-msg)
+                (setq err-msg (with-current-buffer output-buffer
+                                (buffer-string))))
+
+              ;; Remove trailing newlines for a cleaner message
+              (setq err-msg (replace-regexp-in-string "\n+\\'" "" err-msg))
+
+              ;; Display the error
+              (if (string-match-p "\n" err-msg)
+                  ;; If it's a multi-line error, show it in a dedicated pop-up buffer
+                  (with-current-buffer (get-buffer-create "*moonfmt-error*")
+                    (let ((inhibit-read-only t))
+                      (erase-buffer)
+                      (insert err-msg)
+                      (compilation-minor-mode 1)
+                      (display-buffer (current-buffer))))
+                ;; If it's a single-line error, just show it in the echo area
+                (message "moonfmt error: %s" err-msg)))))
+
+      ;; Cleanup temporary resources (runs even if an error is thrown)
+      (when (buffer-live-p output-buffer)
+        (kill-buffer output-buffer))
+      (when (file-exists-p error-file)
+        (delete-file error-file)))))
+
+
+
 ;;; Major mode
 
 ;;;###autoload
